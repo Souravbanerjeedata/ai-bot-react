@@ -2,7 +2,7 @@ import { useContext, useRef } from "react";
 import { CiChat2 } from "react-icons/ci";
 import { FaArrowUp, FaPlus } from "react-icons/fa6";
 import { RiImageAiLine, RiImageUploadLine } from "react-icons/ri";
-import { UserContext } from "../context/UserContext.js";
+import { UserContext } from "../context.jsx";
 import Chat from "./Chat";
 import logo from "../assets/grok-icon.png";
 import { generateImage, generateResponse } from "../gemini";
@@ -113,18 +113,11 @@ export default function Home() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <main className="main">
         <button className="brand" onClick={startNewChat} aria-label="Start a new chat">
           <img src={logo} alt="" className="logo" />
           <span>Grok</span>
         </button>
-        <button className="new-chat" onClick={startNewChat}>
-          <FaPlus aria-hidden="true" /> <span>New chat</span>
-        </button>
-        <div className="sidebar-note">A little curiosity goes a long way.</div>
-      </aside>
-
-      <main className="main">
         <input
           ref={fileInput}
           type="file"
@@ -135,10 +128,7 @@ export default function Home() {
 
         {!isConversationStarted ? (
           <section className="welcome">
-            <div className="welcome-mark"><img src={logo} alt="" /></div>
-            <p className="eyebrow">YOUR AI COMPANION</p>
             <h1>What should we explore?</h1>
-            <p className="welcome-copy">Ask a question, share an image, or bring an idea to life.</p>
             <div className="categories" aria-label="Choose what to do">
               <button className="category" onClick={() => fileInput.current?.click()}>
                 <RiImageAiLine aria-hidden="true" /><span>Understand an image</span>

@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { UserContext } from "./UserContext.js";
+import { createContext, useState } from "react";
+
+// Keep the context and its provider together to make the app state easy to find.
+// oxlint-disable-next-line react/only-export-components
+export const UserContext = createContext(null);
 
 export default function UserContextProvider({ children }) {
   const [messages, setMessages] = useState([]);
