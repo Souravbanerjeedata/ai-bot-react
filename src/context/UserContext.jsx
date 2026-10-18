@@ -1,26 +1,29 @@
-import { createContext, useState } from "react";
-
-export const UserContext = createContext(null);
+import { useState } from "react";
+import { UserContext } from "./UserContext.js";
 
 export default function UserContextProvider({ children }) {
-  const [startRes, setStartRes] = useState(false);
-  const [popup, setPopup] = useState(false);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [feature, setFeature] = useState("chat");
-  const [prevInput, setPrevInput] = useState("");
+  const [image, setImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   return (
     <UserContext.Provider
       value={{
-        startRes,
-        setStartRes,
-        popup,
-        setPopup,
+        messages,
+        setMessages,
         input,
         setInput,
         feature,
         setFeature,
-        prevInput,
-        setPrevInput,
+        image,
+        setImage,
+        isLoading,
+        setIsLoading,
+        error,
+        setError,
       }}
     >
       {children}

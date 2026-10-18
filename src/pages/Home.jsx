@@ -1,111 +1,216 @@
-import { RiImageAiLine, RiImageUploadLine } from "react-icons/ri";
+import { useContext, useRef } from "react";
 import { CiChat2 } from "react-icons/ci";
-import { FaPlus, FaArrowUp } from "react-icons/fa6";
-import { useContext } from "react";
-import { UserContext } from "../context/UserContext";
+import { FaArrowUp, FaPlus } from "react-icons/fa6";
+import { RiImageAiLine, RiImageUploadLine } from "react-icons/ri";
+import { UserContext } from "../context/UserContext.js";
 import Chat from "./Chat";
 import logo from "../assets/grok-icon.png";
+import { generateImage, generateResponse } from "../gemini";
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+function readImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result);
+      resolve({
+        data: dataUrl.split(",")[1],
+        mimeType: file.type,
+        preview: dataUrl,
+        name: file.name,
+      });
+    };
+    reader.onerror = () => reject(new Error("This image could not be opened."));
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function Home() {
   const {
-    startRes,
-    setStartRes,
-    popup,
-    setPopup,
+    messages,
+    setMessages,
     input,
     setInput,
     feature,
     setFeature,
-    prevInput,
-    setPrevInput,
+    image,
+    setImage,
+    isLoading,
+    setIsLoading,
+    error,
+    setError,
   } = useContext(UserContext);
-  async function handleSubmit(e) {
-    setStartRes(true);
-    setPrevInput(input);
-    setInput("");
-  }
-  function handlePopup() {
-    setPopup((prev) => !prev);
-  }
-  function handleFeature(feature) {
-    setFeature(feature);
-    handlePopup();
-  }
-  return (
-    <div className="home">
-      <div className="main">
-        {!startRes ? (
-          <>
-            <nav>
-              <img src={logo} alt="logo" className="logo" />
-              <p>Grok</p>
-            </nav>
-            <h2 className="title">What should we explore?</h2>
-            <div className="categories">
-              <div className="category" onClick={() => setFeature("upload")}>
-                <RiImageAiLine />
-                <span>Upload Image</span>
-              </div>
-              <div className="category" onClick={() => setFeature("generate")}>
-                <RiImageUploadLine />
-                <span>Generate Image</span>
-              </div>
-              <div className="category" onClick={() => setFeature("chat")}>
-                <CiChat2 />
-                <span>Let's Chat</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <Chat />
-        )}
-        <form
-          className="input"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (input) {
-              handleSubmit(e);
-            }
-          }}
-        >
-          {feature === "chat" && (
-            <FaPlus className="plus" onClick={handlePopup} />
-          )}
-          {feature === "generate" && (
-            <RiImageUploadLine className="plus" onClick={handlePopup} />
-          )}
-          {feature === "upload" && (
-            <RiImageAiLine className="plus" onClick={handlePopup} />
-          )}
-          {popup && (
-            <div className="popup">
-              <div className="upload" onClick={() => handleFeature("upload")}>
-                <RiImageAiLine />
-                <span>Upload Image</span>
-              </div>
-              <div
-                className="generate"
-                onClick={() => handleFeature("generate")}
-              >
-                <RiImageUploadLine />
-                <span>Generate Image</span>
-              </div>
-            </div>
-          )}
+  const fileInput = useRef(null);
+  const formRef = useRef(null);
+  const isConversationStarted = messages.length > 0;
 
-          <input
-            type="text"
-            placeholder="Say something..."
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
-          {input && (
-            <button type="submit">
-              <FaArrowUp className="arrow" />
+  function startNewChat() {
+    setMessages([]);
+    setInput("");
+    setImage(null);
+    setError("");
+    setFeature("chat");
+  }
+
+  async function handleImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError("");
+    if (!file.type.startsWith("image/")) {
+      setError("Choose an image file to upload.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setError("Images must be 10 MB or smaller.");
+      return;
+    }
+    try {
+      setImage(await readImage(file));
+      setFeature("chat");
+    } catch (uploadError) {
+      setError(uploadError.message);
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const prompt = input.trim();
+    if ((!prompt && !image) || isLoading) return;
+    const requestImage = image;
+    const visiblePrompt = prompt || "Describe this image.";
+    setInput("");
+    setImage(null);
+    setError("");
+    setIsLoading(true);
+    setMessages((current) => [
+      ...current,
+      { id: crypto.randomUUID(), role: "user", text: visiblePrompt, image: requestImage },
+    ]);
+
+    try {
+      const result =
+        feature === "generate"
+          ? await generateImage(visiblePrompt, requestImage)
+          : await generateResponse(messages, visiblePrompt, requestImage);
+      setMessages((current) => [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: result.text,
+          images: result.images,
+        },
+      ]);
+    } catch (requestError) {
+      setError(requestError.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+      formRef.current?.focus();
+    }
+  }
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <button className="brand" onClick={startNewChat} aria-label="Start a new chat">
+          <img src={logo} alt="" className="logo" />
+          <span>Grok</span>
+        </button>
+        <button className="new-chat" onClick={startNewChat}>
+          <FaPlus aria-hidden="true" /> <span>New chat</span>
+        </button>
+        <div className="sidebar-note">A little curiosity goes a long way.</div>
+      </aside>
+
+      <main className="main">
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleImage}
+        />
+
+        {!isConversationStarted ? (
+          <section className="welcome">
+            <div className="welcome-mark"><img src={logo} alt="" /></div>
+            <p className="eyebrow">YOUR AI COMPANION</p>
+            <h1>What should we explore?</h1>
+            <p className="welcome-copy">Ask a question, share an image, or bring an idea to life.</p>
+            <div className="categories" aria-label="Choose what to do">
+              <button className="category" onClick={() => fileInput.current?.click()}>
+                <RiImageAiLine aria-hidden="true" /><span>Understand an image</span>
+              </button>
+              <button className="category" onClick={() => { setFeature("generate"); formRef.current?.focus(); }}>
+                <RiImageUploadLine aria-hidden="true" /><span>Create an image</span>
+              </button>
+              <button className="category" onClick={() => { setFeature("chat"); formRef.current?.focus(); }}>
+                <CiChat2 aria-hidden="true" /><span>Start a conversation</span>
+              </button>
+            </div>
+          </section>
+        ) : (
+          <Chat messages={messages} isLoading={isLoading} />
+        )}
+
+        <div className="composer-area">
+          {error && <div className="error-banner" role="alert">{error}</div>}
+          <form className="composer" onSubmit={handleSubmit}>
+            {image && (
+              <div className="image-preview">
+                <img src={image.preview} alt={`Selected: ${image.name}`} />
+                <button type="button" aria-label="Remove image" onClick={() => setImage(null)}>×</button>
+              </div>
+            )}
+            <button
+              type="button"
+              className="tool-button"
+              aria-label="Attach an image"
+              title="Attach an image"
+              onClick={() => fileInput.current?.click()}
+            >
+              {feature === "generate" ? <RiImageUploadLine /> : <FaPlus />}
             </button>
-          )}
-        </form>
-      </div>
+            <textarea
+              ref={formRef}
+              rows="1"
+              placeholder={feature === "generate" ? "Describe the image you want to create…" : "Ask anything…"}
+              aria-label="Message"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  event.currentTarget.form.requestSubmit();
+                }
+              }}
+              disabled={isLoading}
+            />
+            <div className="composer-actions">
+              <button
+                type="button"
+                className={`mode-button ${feature === "generate" ? "active" : ""}`}
+                onClick={() => setFeature(feature === "generate" ? "chat" : "generate")}
+                aria-pressed={feature === "generate"}
+                title="Toggle image generation"
+              >
+                <RiImageUploadLine /><span>Create</span>
+              </button>
+              <button
+                type="submit"
+                className="send-button"
+                aria-label="Send message"
+                disabled={isLoading || (!input.trim() && !image)}
+              >
+                <FaArrowUp />
+              </button>
+            </div>
+          </form>
+          <p className="disclaimer">Grok can make mistakes. Check important information.</p>
+        </div>
+      </main>
     </div>
   );
 }
