@@ -25,13 +25,12 @@ html,
 body,
 #root {
   width: 100%;
+  height: 100%;
   min-width: 320px;
-  min-height: 100%;
   margin: 0;
 }
 body {
-  min-height: 100vh;
-  min-height: 100svh;
+  overflow: hidden;
 }
 textarea {
   resize: none;
@@ -52,17 +51,20 @@ a:focus-visible {
 }
 
 .app-shell {
-  min-height: 100vh;
-  min-height: 100svh;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: #000;
 }
 .main {
   display: flex;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100svh;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
   padding: 20px 32px 16px;
 }
 .brand {
@@ -107,9 +109,11 @@ a:focus-visible {
 .conversation {
   display: flex;
   width: min(100%, 760px);
-  flex: 1;
+  min-height: 0;
+  flex: 1 1 0;
   flex-direction: column;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 46px 10px 30px;
   scrollbar-color: #3a3a3a transparent;
 }
@@ -222,6 +226,7 @@ a:focus-visible {
 .composer-area {
   width: min(100%, 760px);
   flex: 0 0 auto;
+  margin-inline: auto;
   padding: 0 0 12px;
 }
 .composer {
@@ -324,12 +329,6 @@ a:focus-visible {
   border-color: #686868;
   background: #242424;
   color: #fff;
-}
-.disclaimer {
-  margin: 9px 0 0;
-  color: #777;
-  text-align: center;
-  font-size: 10px;
 }
 .image-preview {
   position: relative;
@@ -497,9 +496,6 @@ a:focus-visible {
     gap: 6px;
     padding: 7px 10px;
     font-size: 11px;
-  }
-  .disclaimer {
-    font-size: 9px;
   }
 }
 

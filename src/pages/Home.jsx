@@ -121,14 +121,16 @@ export default function Home() {
   return (
     <div className="app-shell">
       <main className="main">
-        <button
-          className="brand"
-          onClick={startNewChat}
-          aria-label="Start a new chat"
-        >
-          <img src={logo} alt="" className="logo" />
-          <span>Grok</span>
-        </button>
+        {!isConversationStarted && (
+          <button
+            className="brand"
+            onClick={startNewChat}
+            aria-label="Start a new chat"
+          >
+            <img src={logo} alt="" className="logo" />
+            <span>Grok</span>
+          </button>
+        )}
         <input
           ref={fileInput}
           type="file"
@@ -244,9 +246,6 @@ export default function Home() {
               </button>
             </div>
           </form>
-          <p className="disclaimer">
-            Grok can make mistakes. Check important information.
-          </p>
         </div>
       </main>
     </div>
