@@ -86,7 +86,12 @@ export default function Home() {
     setIsLoading(true);
     setMessages((current) => [
       ...current,
-      { id: crypto.randomUUID(), role: "user", text: visiblePrompt, image: requestImage },
+      {
+        id: crypto.randomUUID(),
+        role: "user",
+        text: visiblePrompt,
+        image: requestImage,
+      },
     ]);
 
     try {
@@ -104,7 +109,9 @@ export default function Home() {
         },
       ]);
     } catch (requestError) {
-      setError(requestError.message || "Something went wrong. Please try again.");
+      setError(
+        requestError.message || "Something went wrong. Please try again.",
+      );
     } finally {
       setIsLoading(false);
       formRef.current?.focus();
@@ -114,7 +121,11 @@ export default function Home() {
   return (
     <div className="app-shell">
       <main className="main">
-        <button className="brand" onClick={startNewChat} aria-label="Start a new chat">
+        <button
+          className="brand"
+          onClick={startNewChat}
+          aria-label="Start a new chat"
+        >
           <img src={logo} alt="" className="logo" />
           <span>Grok</span>
         </button>
@@ -130,14 +141,32 @@ export default function Home() {
           <section className="welcome">
             <h1>What should we explore?</h1>
             <div className="categories" aria-label="Choose what to do">
-              <button className="category" onClick={() => fileInput.current?.click()}>
-                <RiImageAiLine aria-hidden="true" /><span>Understand an image</span>
+              <button
+                className="category"
+                onClick={() => fileInput.current?.click()}
+              >
+                <RiImageAiLine aria-hidden="true" />
+                <span>Understand an image</span>
               </button>
-              <button className="category" onClick={() => { setFeature("generate"); formRef.current?.focus(); }}>
-                <RiImageUploadLine aria-hidden="true" /><span>Create an image</span>
+              <button
+                className="category"
+                onClick={() => {
+                  setFeature("generate");
+                  formRef.current?.focus();
+                }}
+              >
+                <RiImageUploadLine aria-hidden="true" />
+                <span>Create an image</span>
               </button>
-              <button className="category" onClick={() => { setFeature("chat"); formRef.current?.focus(); }}>
-                <CiChat2 aria-hidden="true" /><span>Start a conversation</span>
+              <button
+                className="category"
+                onClick={() => {
+                  setFeature("chat");
+                  formRef.current?.focus();
+                }}
+              >
+                <CiChat2 aria-hidden="true" />
+                <span>Start a conversation</span>
               </button>
             </div>
           </section>
@@ -146,12 +175,22 @@ export default function Home() {
         )}
 
         <div className="composer-area">
-          {error && <div className="error-banner" role="alert">{error}</div>}
+          {error && (
+            <div className="error-banner" role="alert">
+              {error}
+            </div>
+          )}
           <form className="composer" onSubmit={handleSubmit}>
             {image && (
               <div className="image-preview">
                 <img src={image.preview} alt={`Selected: ${image.name}`} />
-                <button type="button" aria-label="Remove image" onClick={() => setImage(null)}>×</button>
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  onClick={() => setImage(null)}
+                >
+                  ×
+                </button>
               </div>
             )}
             <button
@@ -166,7 +205,11 @@ export default function Home() {
             <textarea
               ref={formRef}
               rows="1"
-              placeholder={feature === "generate" ? "Describe the image you want to create…" : "Ask anything…"}
+              placeholder={
+                feature === "generate"
+                  ? "Describe the image you want to create…"
+                  : "Ask anything…"
+              }
               aria-label="Message"
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -182,11 +225,14 @@ export default function Home() {
               <button
                 type="button"
                 className={`mode-button ${feature === "generate" ? "active" : ""}`}
-                onClick={() => setFeature(feature === "generate" ? "chat" : "generate")}
+                onClick={() =>
+                  setFeature(feature === "generate" ? "chat" : "generate")
+                }
                 aria-pressed={feature === "generate"}
                 title="Toggle image generation"
               >
-                <RiImageUploadLine /><span>Create</span>
+                <RiImageUploadLine />
+                <span>Create</span>
               </button>
               <button
                 type="submit"
@@ -198,7 +244,9 @@ export default function Home() {
               </button>
             </div>
           </form>
-          <p className="disclaimer">Grok can make mistakes. Check important information.</p>
+          <p className="disclaimer">
+            Grok can make mistakes. Check important information.
+          </p>
         </div>
       </main>
     </div>
